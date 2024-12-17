@@ -1,5 +1,5 @@
 dataset:
-  small_dataset: false
+  small_dataset: true
   json_filepath: "../data/AtomicCards.json"
   include_side_deck: true
   ignore_lands: true

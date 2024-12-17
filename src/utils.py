@@ -43,7 +43,7 @@ def transform_json(file):
                     new_json[card][info] = file['data'][card][0][info]
                 if len(file['data'][card]) > 1:
                     if file['data'][card][1].get(info):
-                        new_json[card]['BACK:' + info] = file['data'][card][1][info]
+                        new_json[card]['<BACK> ' + info] = file['data'][card][1][info]
     for key in copy(new_json):
         if ' // ' in key and key.split(' // ')[0] == key.split(' // ')[1]:
             new_json[key.split(' // ')[0]] = new_json[key]
@@ -53,7 +53,7 @@ def transform_json(file):
 
 
 
-def save_time_series():
+def save_time_series(total_counts, id2card, card2id, json_data, used_card_names):
     """Erstellt ein Zeitreihendiagramm der Karten nach ihrem ersten Release"""
     if small_dataset:
         print("Warning: Using function save_time_series for small dataset.")
@@ -78,4 +78,4 @@ def save_time_series():
     plt.text(0.01, 0.99, f'Total Cards: {int(sum(total_counts))}', transform=plt.gca().transAxes, verticalalignment='top')
     plt.text(0.01, 0.95, f'Ignored Cards: {nr_of_cards_of_unknown_first_printings}', transform=plt.gca().transAxes, verticalalignment='top')
     plt.text(0.01, 0.91, date.today().strftime('%d %B, %Y'), transform=plt.gca().transAxes, verticalalignment='top')
-    plt.tight_layout(), plt.savefig('visual_output/first_release_time_series.png'), plt.close()
+    plt.tight_layout(), plt.savefig('../visual_output/first_release_time_series.png'), plt.close()

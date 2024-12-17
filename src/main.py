@@ -6,12 +6,9 @@ from scipy.stats import pearsonr
 
 from transformers import TrainingArguments, Trainer
 import utils
-from dataset import prepare_mtg_dataset
 from model import MTGPopularityPredictor
-from src.dataset import used_card_names
 from trainer import MTGTrainer
-from dataset import all_decks
-
+from dataset import all_decks, used_card_names
 
 
 with open('config.yaml', 'r') as file:
@@ -23,6 +20,8 @@ small_dataset, json_filepath, preserved_information, ignore_lands, include_side_
 with open(json_filepath, "r", encoding="UTF-8") as file:
     json_data = json.load(file)
     json_data = utils.transform_json(json_data)
+
+
 
 with open('../data/modern_banlist_2024-10-29.txt') as f:
     banlist = [line.rstrip() for line in f.readlines()]
@@ -42,6 +41,7 @@ with open("../data/SetList.json", "r", encoding="UTF-8") as file:
     for expansion in set_data['data']:
         release_dates[expansion['code']] = datetime.strptime(expansion['releaseDate'], "%Y-%m-%d")
         release_dates = dict(sorted(release_dates.items(), key=lambda x: x[1]))
+
 
 
 def compute_metrics(eval_pred):
@@ -96,21 +96,11 @@ training_args = TrainingArguments(
 
 
 if __name__ == '__main__':
-    #recommend_for_deck('Abzan_Tokens')
-    #print(design_matrix.shape)
     from utils import save_time_series
-    save_time_series(used_card_names, total_counts, id2card, json_data)
+    #save_time_series(total_counts, id2card, card2id, json_data, used_card_names)
 
-    # deck_tuples = [(tuple(sorted(deck.main_deck)), deck.title) for deck in all_decks]
-    # duplicate_decks = [item for item, count in Counter(d[0] for d in deck_tuples).items() if count > 1]
-    # duplicate_titles = [title for deck, title in deck_tuples if deck in duplicate_decks]
-    #print(np.array([int(bool(deck.side_deck)) for deck in all_decks]).mean())
 
-    utils.save_time_series()
-    quit()
 
-    # 2. Dataset vorbereiten
-    dataset = prepare_mtg_dataset()
     quit()
     # 3. Train/Val/Test Split
     train_test = dataset.train_test_split(test_size=0.2)

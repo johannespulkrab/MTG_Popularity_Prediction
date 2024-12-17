@@ -20,76 +20,6 @@ with open(json_filepath, "r", encoding="UTF-8") as file:
     json_data = utils.transform_json(json_data)
 
 
-
-def prepare_mtg_dataset():
-    tokenizer = RobertaTokenizer.from_pretrained('roberta-large')
-
-    texts = []
-    labels = []
-
-    for card_name in card2id.keys():
-        if card_name not in json_data:
-            continue
-
-        card_data = json_data[card_name]
-
-        # Text zusammenbauen
-        text = f"Name: {card_name} "
-        if 'manaCost' in card_data:
-            text += f"Mana: {card_data['manaCost']} "
-        if 'type' in card_data:
-            text += f"Type: {card_data['type']} "
-        if 'text' in card_data:
-            text += f"Text: {card_data['text']}"
-        if 'BACK:manaCost' in card_data:
-            text += f"Back Mana: {card_data['BACK:manaCost']}"
-        if 'BACK:type' in card_data:
-            text += f"Back Type: {card_data['BACK:type']}"
-        if 'BACK:text' in card_data:
-            text += f"Back Text: {card_data['BACK:text']}"
-
-
-        # Magic-Symbole ersetzen
-        text = text.replace("{T}", "tap")
-        text = text.replace("{W}", "white mana")
-        text = text.replace("{U}", "blue mana")
-        text = text.replace("{B}", "black mana")
-        text = text.replace("{R}", "red mana")
-        text = text.replace("{G}", "green mana")
-
-        # Labels vorbereiten
-        count = float(total_counts[card2id[card_name]])  # Als Float konvertieren
-        normalized_count = float(np.log1p(count))  # log(1+x) Transformation
-
-        texts.append(text)
-        labels.append(normalized_count)
-
-    # Dataset erstellen
-    dataset = Dataset.from_dict({
-        "text": texts,
-        "labels": labels
-    })
-
-    # Tokenizer-Funktion
-    def tokenize_function(examples):
-        return tokenizer(
-            examples["text"],
-            padding="max_length",
-            truncation=True,
-            max_length=128,
-            return_tensors="pt"
-        )
-
-    # Dataset tokenisieren
-    tokenized_dataset = dataset.map(
-        tokenize_function,
-        batched=True,
-        remove_columns=["text"]  # Behalte die labels!
-    )
-
-    return tokenized_dataset
-
-
 class Deck:
     def __init__(self, title, main_deck, side_deck=None):
         self.title = title
@@ -162,7 +92,6 @@ class Deck:
 data_dir = os.listdir('../data/internet_decks/')[:1000] if small_dataset else os.listdir('../data/internet_decks/')
 all_decks = [Deck.from_txt(f'../data/internet_decks/{deck}') for deck in tqdm(list(data_dir), desc="Loading decks") if deck.endswith('.txt')]
 all_decks += [Deck.from_txt(f'../data/selfmade_decks/{deck}') for deck in os.listdir('../data/selfmade_decks/') if deck.endswith('.txt')]
-
 # Filtere Decks
 filtered_decks = []
 for deck in all_decks:
@@ -174,10 +103,6 @@ for deck in all_decks:
 all_decks = filtered_decks
 
 
-# Sammle verwendete Kartennamen
-used_card_names = set().union(*(deck.main_deck for deck in all_decks))
-if include_side_deck:
-    used_card_names.update(*(deck.side_deck for deck in all_decks))
 
 # Ignoriere Länder falls gewünscht
 if ignore_lands:
@@ -187,6 +112,10 @@ if ignore_lands:
         deck.side_deck = [card for card in deck.side_deck if
                           'Land' not in json_data.get(card, {}).get('types', [])]
 
+# Sammle verwendete Kartennamen
+used_card_names = set().union(*(deck.main_deck for deck in all_decks))
+if include_side_deck:
+    used_card_names.update(*(deck.side_deck for deck in all_decks))
 
 # Erstelle Mappings
 card2id = {card: i for i, card in enumerate(used_card_names)}
@@ -201,6 +130,69 @@ for i, deck in enumerate(all_decks):
         design_matrix[i, card2id[card]] += 1
 
 
-# Berechne total_counts und cooc_X
+
 total_counts = np.maximum(np.sum(design_matrix, axis=0), 1)
-cooc_X = design_matrix.T @ design_matrix - np.diag(total_counts)
+
+tokenizer = RobertaTokenizer.from_pretrained('roberta-large')
+
+texts = []
+labels = []
+
+for card_name in used_card_names:
+    if card_name not in json_data:
+        raise ValueError(f"Card '{card_name}' not found in json_data.")
+
+    card_data = json_data[card_name]
+
+    # Text zusammenbauen
+    text = f"Name: {card_name} "
+    for attr in ['manaCost', 'type', 'text']:
+        if value := card_data.get(attr):
+            text += f"{attr}: {value} "
+        if back_value := card_data.get('<BACK> ' + attr):
+            text += f"<BACK> {attr}: {back_value} "
+
+
+
+    # Magic-Symbole ersetzen
+    text = text.replace("{T}", "tap")
+    text = text.replace("{W}", "white mana")
+    text = text.replace("{U}", "blue mana")
+    text = text.replace("{B}", "black mana")
+    text = text.replace("{R}", "red mana")
+    text = text.replace("{G}", "green mana")
+
+    # Labels vorbereiten
+    count = float(total_counts[card2id[card_name]])  # Als Float konvertieren
+    normalized_count = float(np.log1p(count))  # log(1+x) Transformation
+
+    texts.append(text)
+    labels.append(normalized_count)
+
+# Dataset erstellen
+dataset = Dataset.from_dict({
+    "text": texts,
+    "labels": labels
+})
+
+
+# Tokenizer-Funktion
+def tokenize_function(examples):
+    return tokenizer(
+        examples["text"],
+        padding="max_length",
+        truncation=True,
+        max_length=128,
+        return_tensors="pt"
+    )
+
+
+# Dataset tokenisieren
+tokenized_dataset = dataset.map(
+    tokenize_function,
+    batched=True,
+    remove_columns=["text"]  # Behalte die labels!
+)
+
+#return tokenized_dataset
+
