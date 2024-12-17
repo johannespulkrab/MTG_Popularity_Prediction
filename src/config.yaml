@@ -1,0 +1,28 @@
+dataset:
+  small_dataset: false
+  json_filepath: "../data/AtomicCards.json"
+  include_side_deck: true
+  ignore_lands: true
+
+card_features:
+  preserved_information:
+    - text
+    - keywords
+    - side
+    - loyalty
+    - colorIdentity
+    - power
+    - toughness
+    - types
+    - subtypes
+    - manaCost
+    - colors
+    - supertypes
+    - manaValue
+    - type
+    - types
+    - name
+    - firstPrinting
+
+model_parameters:
+  svd_components: 16
