@@ -70,7 +70,7 @@ def save_time_series(total_counts, id2card, card2id, json_data, used_card_names)
     first_release_sets = dict(sorted(first_release_sets.items(), key=lambda x: release_dates[x[0]]))
     expansions = list(first_release_sets.keys())
     counts = list(first_release_sets.values())
-    expansions = [f"{exp}-{release_dates[exp].strftime("%Y-%m")}" for exp in expansions]
+    expansions = [f"{exp}-{release_dates[exp].strftime('%Y-%m')}" for exp in expansions]
 
     plt.figure(figsize=(14, 7))
     plt.bar(expansions, counts, color='skyblue'), plt.xlabel('Release Date'), plt.ylabel('Number of Cards')

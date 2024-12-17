@@ -9,6 +9,7 @@ import utils
 from model import MTGPopularityPredictor
 from trainer import MTGTrainer
 from dataset import all_decks, used_card_names, tokenized_dataset
+from datetime import datetime
 
 
 
@@ -127,6 +128,7 @@ if __name__ == '__main__':
 
     # 8. Finale Evaluation auf Test-Set
     test_results = trainer.evaluate(test_dataset)
-    print(test_results)
+    with open("scores.txt", "w") as file:
+        file.write(f"{datetime.now().strftime('%Y-%m-%d_%H-%M')} Accuracy: {str(test_results)}")
 
 
