@@ -8,7 +8,8 @@ from transformers import TrainingArguments, Trainer
 import utils
 from model import MTGPopularityPredictor
 from trainer import MTGTrainer
-from dataset import all_decks, used_card_names
+from dataset import all_decks, used_card_names, tokenized_dataset
+
 
 
 with open('config.yaml', 'r') as file:
@@ -96,13 +97,9 @@ training_args = TrainingArguments(
 
 
 if __name__ == '__main__':
-    from utils import save_time_series
     #save_time_series(total_counts, id2card, card2id, json_data, used_card_names)
-
-
-
-    quit()
-    # 3. Train/Val/Test Split
+    dataset = tokenized_dataset
+    #Train/Val/Test Split
     train_test = dataset.train_test_split(test_size=0.2)
     train_val = train_test["train"].train_test_split(test_size=0.125)
 
@@ -130,6 +127,6 @@ if __name__ == '__main__':
 
     # 8. Finale Evaluation auf Test-Set
     test_results = trainer.evaluate(test_dataset)
-    print(f"Test Results: {test_results}")
+    print(test_results)
 
 

@@ -135,10 +135,7 @@ total_counts = np.maximum(np.sum(design_matrix, axis=0), 1)
 
 tokenizer = RobertaTokenizer.from_pretrained('roberta-large')
 
-texts = []
-labels = []
-
-for card_name in used_card_names:
+def encode_in_text(card_name):
     if card_name not in json_data:
         raise ValueError(f"Card '{card_name}' not found in json_data.")
 
@@ -152,24 +149,40 @@ for card_name in used_card_names:
         if back_value := card_data.get('<BACK> ' + attr):
             text += f"<BACK> {attr}: {back_value} "
 
+    MANA_SYMBOLS = {
+        "{T}": "tap",
+        "{W}": "white mana",
+        "{U}": "blue mana",
+        "{B}": "black mana",
+        "{R}": "red mana",
+        "{G}": "green mana",
+        "{C}": "colorless mana",
+        "{S}": "snow mana",
+        "{E}": "energy",
+        "{X}": "variable mana"
+    }
 
+    # Ersetze nummerische Mana-Symbole
+    text = re.sub(r"\{(\d+)\}", r"\1 generic mana ", text)
 
-    # Magic-Symbole ersetzen
-    text = text.replace("{T}", "tap")
-    text = text.replace("{W}", "white mana")
-    text = text.replace("{U}", "blue mana")
-    text = text.replace("{B}", "black mana")
-    text = text.replace("{R}", "red mana")
-    text = text.replace("{G}", "green mana")
-
+    # Ersetze vordefinierte Symbole
+    for symbol, replacement in MANA_SYMBOLS.items():
+        text = text.replace(symbol, replacement + " ")
+    text.replace('\n', ' ')
     # Labels vorbereiten
     count = float(total_counts[card2id[card_name]])  # Als Float konvertieren
     normalized_count = float(np.log1p(count))  # log(1+x) Transformation
 
-    texts.append(text)
-    labels.append(normalized_count)
+    return text, normalized_count
 
-# Dataset erstellen
+texts, labels = [], []
+for card in used_card_names:
+    text, label = encode_in_text(card)
+    texts.append(text)
+    labels.append(label)
+
+
+#Dataset erstellen
 dataset = Dataset.from_dict({
     "text": texts,
     "labels": labels
