@@ -13,7 +13,7 @@ from tqdm import tqdm
 with open('../data/modern_banlist_2024-10-29.txt') as f:
     banlist = [line.rstrip() for line in f.readlines()]
 
-small_dataset, json_filepath, preserved_information, ignore_lands, include_side_deck, svd_components = utils.parse_config()
+small_dataset, json_filepath, preserved_information, ignore_lands, include_side_deck, svd_components, banlist_path = utils.parse_config()
 
 with open(json_filepath, "r", encoding="UTF-8") as file:
     json_data = json.load(file)
@@ -133,6 +133,9 @@ for i, deck in enumerate(all_decks):
 
 total_counts = np.maximum(np.sum(design_matrix, axis=0), 1)
 
+np.save('../data/array.npy', total_counts)
+
+
 tokenizer = RobertaTokenizer.from_pretrained('roberta-large')
 
 def encode_in_text(card_name):
@@ -143,7 +146,7 @@ def encode_in_text(card_name):
 
     # Text zusammenbauen
     text = f"Name: {card_name} "
-    for attr in ['manaCost', 'type', 'text']:
+    for attr in ['manaCost', 'type', 'power', 'toughness', 'loyalty', 'text']:
         if value := card_data.get(attr):
             text += f"{attr}: {value} "
         if back_value := card_data.get('<BACK> ' + attr):
@@ -151,15 +154,15 @@ def encode_in_text(card_name):
 
     MANA_SYMBOLS = {
         "{T}": "tap",
-        "{W}": "white mana",
-        "{U}": "blue mana",
-        "{B}": "black mana",
-        "{R}": "red mana",
-        "{G}": "green mana",
-        "{C}": "colorless mana",
-        "{S}": "snow mana",
+        "{W}": "white",
+        "{U}": "blue",
+        "{B}": "black",
+        "{R}": "red",
+        "{G}": "green",
+        "{C}": "colorless",
+        "{S}": "snow",
         "{E}": "energy",
-        "{X}": "variable mana"
+        "{X}": "variable"
     }
 
     # Ersetze nummerische Mana-Symbole
@@ -172,6 +175,7 @@ def encode_in_text(card_name):
     # Labels vorbereiten
     count = float(total_counts[card2id[card_name]])  # Als Float konvertieren
     normalized_count = float(np.log1p(count))  # log(1+x) Transformation
+    #normalized_count = (count - np.min(total_counts)) / (np.max(total_counts) - np.min(total_counts))
 
     return text, normalized_count
 
@@ -207,5 +211,5 @@ tokenized_dataset = dataset.map(
     remove_columns=["text"]  # Behalte die labels!
 )
 
-#return tokenized_dataset
+
 

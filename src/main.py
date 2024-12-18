@@ -17,7 +17,7 @@ with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
 
 
-small_dataset, json_filepath, preserved_information, ignore_lands, include_side_deck, svd_components = utils.parse_config()
+small_dataset, json_filepath, preserved_information, ignore_lands, include_side_deck, svd_components, banlist_path = utils.parse_config()
 
 with open(json_filepath, "r", encoding="UTF-8") as file:
     json_data = json.load(file)
@@ -25,7 +25,7 @@ with open(json_filepath, "r", encoding="UTF-8") as file:
 
 
 
-with open('../data/modern_banlist_2024-10-29.txt') as f:
+with open(banlist_path) as f:
     banlist = [line.rstrip() for line in f.readlines()]
 
 with open("../data/SetList.json", "r", encoding="UTF-8") as file:
@@ -50,9 +50,11 @@ def compute_metrics(eval_pred):
     predictions, labels = eval_pred
     pearson_corr, _ = pearsonr(predictions, labels)
     mse = np.mean((predictions - labels) ** 2)
+    mae = (predictions - labels).mean()
     return {
         "pearson_correlation": pearson_corr,
-        "mse": mse
+        "mse": mse,
+        "mae": mae
     }
 
 # Erstelle Mappings
@@ -79,7 +81,7 @@ def train_and_save_best():
     )
 
     dataset = tokenized_dataset
-    train_test = dataset.train_test_split(test_size=0.2)
+    train_test = dataset.train_test_split(test_size=0.2, seed=42)
     train_val = train_test["train"].train_test_split(test_size=0.125)
 
     train_dataset = train_val["train"]
@@ -106,8 +108,11 @@ def train_and_save_best():
 
     # 8. Finale Evaluation auf Test-Set
     test_results = trainer.evaluate(test_dataset)
-    with open("../scores.txt", "w") as file:
-        file.write(f"{datetime.now().strftime('%Y-%m-%d_%H-%M')}: {str(test_results)}")
+    with open("../scores.txt", "a") as file:
+        entry = f"Trained on {datetime.now().strftime('%Y-%m-%d_%H-%M')}; Metrics:\n"
+        for met, val in test_results.items():
+            entry += f"{met}: {round(val, 2)}\n"
+        file.write(entry)
 
 
 def save_label_vs_prediction_plot():
@@ -115,7 +120,6 @@ def save_label_vs_prediction_plot():
     from transformers import RobertaTokenizer
     import matplotlib.pyplot as plt
     import torch
-    import numpy as np
     from tqdm import tqdm
     from torch.utils.data import DataLoader
 
@@ -215,27 +219,11 @@ def save_label_vs_prediction_plot():
     print(f'MSE: {mse:.4f}')
     print(f'Pearson Korrelation: {pearson_corr:.4f}')
 
-    # Interessante Karten ausgeben
-    print("\nTop 10 am häufigsten gespielte Karten im Testset:")
-    top_indices = np.argsort(labels)[-10:][::-1]
-    for idx in top_indices:
-        print(
-            f"{test_card_names[idx]}: Tatsächlich {np.exp(labels[idx]):.0f}, Vorhergesagt {np.exp(predictions[idx]):.0f}")
-
-    print("\nTop 10 am stärksten unterschätzte Karten:")
-    underestimated = np.argsort(labels - predictions)[-10:][::-1]
-    for idx in underestimated:
-        print(
-            f"{test_card_names[idx]}: Unterschätzt um {np.exp(labels[idx]) - np.exp(predictions[idx]):.0f} (Tatsächlich {np.exp(labels[idx]):.0f}, Vorhergesagt {np.exp(predictions[idx]):.0f})")
-
-    print("\nTop 10 am stärksten überschätzte Karten:")
-    overestimated = np.argsort(predictions - labels)[-10:][::-1]
-    for idx in overestimated:
-        print(
-            f"{test_card_names[idx]}: Überschätzt um {np.exp(predictions[idx]) - np.exp(labels[idx]):.0f} (Tatsächlich {np.exp(labels[idx]):.0f}, Vorhergesagt {np.exp(predictions[idx]):.0f})")
 
 if __name__ == '__main__':
-    save_label_vs_prediction_plot()
+    train_and_save_best()
+    #save_label_vs_prediction_plot()
+
 
 
 

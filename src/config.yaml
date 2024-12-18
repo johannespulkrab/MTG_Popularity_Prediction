@@ -1,6 +1,7 @@
 dataset:
   small_dataset: false
   json_filepath: "../data/AtomicCards.json"
+  banlist_path: '../data/modern_banlist_2024-10-29.txt'
   include_side_deck: true
   ignore_lands: true
 
@@ -29,10 +30,10 @@ model_parameters:
 
 training_parameters:
   output_dir: "mtg-popularity-predictor"
-  num_train_epochs: 15
-  per_device_train_batch_size: 16
-  per_device_eval_batch_size: 16
-  gradient_accumulation_steps: 4
+  num_train_epochs: 25
+  per_device_train_batch_size: 32
+  per_device_eval_batch_size: 32
+  gradient_accumulation_steps: 2
   eval_strategy: "steps"
   eval_steps: 100
   save_strategy: "steps"

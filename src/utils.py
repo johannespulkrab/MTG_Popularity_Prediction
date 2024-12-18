@@ -7,6 +7,8 @@ import torch
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
+
+
 with open("../data/SetList.json", "r", encoding="UTF-8") as file:
     set_data = json.load(file)
     release_dates = dict()
@@ -20,13 +22,14 @@ def parse_config():
         config = yaml.safe_load(file)
     small_dataset = config['dataset']['small_dataset']
     json_filepath = config['dataset']['json_filepath']
+    banlist_path = config['dataset']['banlist_path']
     preserved_information = config['card_features']['preserved_information']
     ignore_lands = config['dataset']['ignore_lands']
     include_side_deck = config['dataset']['include_side_deck']
     svd_components = config['model_parameters']['svd_components']
-    return small_dataset, json_filepath, preserved_information, ignore_lands, include_side_deck, svd_components
+    return small_dataset, json_filepath, preserved_information, ignore_lands, include_side_deck, svd_components, banlist_path
 
-small_dataset, json_filepath, preserved_information, ignore_lands, include_side_deck, svd_components = parse_config()
+small_dataset, json_filepath, preserved_information, ignore_lands, include_side_deck, svd_components, banlist_path = parse_config()
 
 
 def transform_json(file):
