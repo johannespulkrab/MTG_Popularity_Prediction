@@ -1,4 +1,5 @@
 mtg_popularity_env/
 data/
 visual_output/*
-
+src/best_mtg_predictor/*
+src/mtg-popularity-predictor/*

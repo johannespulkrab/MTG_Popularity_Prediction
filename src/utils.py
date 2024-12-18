@@ -3,7 +3,9 @@ from matplotlib import pyplot as plt
 import yaml
 import json
 from copy import copy
-
+import torch
+import numpy as np
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 with open("../data/SetList.json", "r", encoding="UTF-8") as file:
     set_data = json.load(file)
@@ -79,3 +81,48 @@ def save_time_series(total_counts, id2card, card2id, json_data, used_card_names)
     plt.text(0.01, 0.95, f'Ignored Cards: {nr_of_cards_of_unknown_first_printings}', transform=plt.gca().transAxes, verticalalignment='top')
     plt.text(0.01, 0.91, date.today().strftime('%d %B, %Y'), transform=plt.gca().transAxes, verticalalignment='top')
     plt.tight_layout(), plt.savefig('../visual_output/first_release_time_series.png'), plt.close()
+
+
+def evaluate_model(model, dataloader, device="cuda"):
+    model.eval()  # Modell in Evaluierungsmodus setzen
+    all_predictions = []
+    all_labels = []
+    total_loss = 0
+    num_batches = 0
+
+    with torch.no_grad():  # Deaktiviert den Gradientenabstieg
+        for batch in dataloader:
+            # Daten auf das richtige Device verschieben
+            input_ids = batch["input_ids"].to(device)
+            attention_mask = batch["attention_mask"].to(device)
+            labels = batch["labels"].to(device)
+
+            # Forward pass
+            outputs = model(input_ids, attention_mask, labels)
+            predictions = outputs["logits"]
+            loss = outputs["loss"]
+
+            # Sammle Vorhersagen und Labels
+            all_predictions.extend(predictions.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+
+            # Sammle Loss
+            total_loss += loss.item()
+            num_batches += 1
+
+    # Konvertiere zu Arrays für einfachere Berechnung
+    predictions_array = np.array(all_predictions)
+    labels_array = np.array(all_labels)
+
+    # Berechne Metriken
+    metrics = {
+        "avg_loss": total_loss / num_batches,
+        "mse": mean_squared_error(labels_array, predictions_array),
+        "rmse": np.sqrt(mean_squared_error(labels_array, predictions_array)),
+        "mae": mean_absolute_error(labels_array, predictions_array)
+    }
+
+    return metrics
+
+
+
