@@ -1,16 +1,19 @@
 import json
-from datetime import date, datetime
+
 import numpy as np
 import yaml
 from scipy.stats import pearsonr
-
 from transformers import TrainingArguments, Trainer
 import utils
 from model import MTGPopularityPredictor
 from trainer import MTGTrainer
 from dataset import all_decks, used_card_names, tokenized_dataset
 from datetime import datetime
-
+from model import MTGPopularityPredictor
+import matplotlib.pyplot as plt
+import torch
+from tqdm import tqdm
+from torch.utils.data import DataLoader
 
 
 with open('config.yaml', 'r') as file:
@@ -116,12 +119,7 @@ def train_and_save_best():
 
 
 def save_label_vs_prediction_plot():
-    from model import MTGPopularityPredictor
-    from transformers import RobertaTokenizer
-    import matplotlib.pyplot as plt
-    import torch
-    from tqdm import tqdm
-    from torch.utils.data import DataLoader
+
 
     # GPU oder CPU
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -141,7 +139,6 @@ def save_label_vs_prediction_plot():
     test_card_names = [card_names[i] for i in test_card_indices]
 
     # Tokenizer und Modell laden
-    tokenizer = RobertaTokenizer.from_pretrained('roberta-large')
     model = MTGPopularityPredictor.from_pretrained('best_mtg_predictor')
     model = model.to(device)
     model.eval()

@@ -60,3 +60,30 @@ eval_runtime: 0.3
 eval_samples_per_second: 6004.23
 eval_steps_per_second: 63.7
 epoch: 25.0
+Trained on 2024-12-18_23-27; Metrics:
+eval_loss: 0.78
+eval_pearson_correlation: 0.81
+eval_mse: 0.78
+eval_mae: 0.09
+eval_runtime: 2.6
+eval_samples_per_second: 688.92
+eval_steps_per_second: 7.31
+epoch: 25.0
+Trained on 2024-12-18_23-27; Metrics:
+eval_loss: 0.78
+eval_pearson_correlation: 0.81
+eval_mse: 0.78
+eval_mae: 0.09
+eval_runtime: 2.6
+eval_samples_per_second: 689.0
+eval_steps_per_second: 7.31
+epoch: 25.0
+Trained on 2024-12-18_23-27; Metrics:
+eval_loss: 0.78
+eval_pearson_correlation: 0.81
+eval_mse: 0.78
+eval_mae: 0.09
+eval_runtime: 0.3
+eval_samples_per_second: 5959.06
+eval_steps_per_second: 63.22
+epoch: 25.0
