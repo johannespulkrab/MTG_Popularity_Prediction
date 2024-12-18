@@ -1,1 +1,1 @@
-2024-12-17_23-16: {'eval_loss': 1.1653116941452026, 'eval_pearson_correlation': 0.6879085615345266, 'eval_mse': 1.1599706411361694, 'eval_runtime': 0.4122, 'eval_samples_per_second': 4344.792, 'eval_steps_per_second': 92.184, 'epoch': 14.977099236641221}
+2024-12-18_00-55: {'eval_loss': 1.2437431812286377, 'eval_pearson_correlation': 0.6876697409010211, 'eval_mse': 1.2436256408691406, 'eval_runtime': 2.6054, 'eval_samples_per_second': 687.417, 'eval_steps_per_second': 14.585, 'epoch': 14.977099236641221}

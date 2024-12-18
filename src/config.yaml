@@ -26,3 +26,24 @@ card_features:
 
 model_parameters:
   svd_components: 16
+
+training_parameters:
+  output_dir: "mtg-popularity-predictor"
+  num_train_epochs: 15
+  per_device_train_batch_size: 16
+  per_device_eval_batch_size: 16
+  gradient_accumulation_steps: 4
+  eval_strategy: "steps"
+  eval_steps: 100
+  save_strategy: "steps"
+  save_steps: 100
+  load_best_model_at_end: true
+  metric_for_best_model: "mse"
+  greater_is_better: false
+  learning_rate: 3.0e-5
+  warmup_ratio: 0.1
+  weight_decay: 0.05
+  logging_dir: "./logs"
+  logging_steps: 20
+  fp16: true
+  ddp_find_unused_parameters: true

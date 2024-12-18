@@ -73,28 +73,41 @@ cooc_X = design_matrix.T @ design_matrix - np.diag(total_counts)
 
 
 
-training_args = TrainingArguments(
-    output_dir="mtg-popularity-predictor",
-    num_train_epochs=15,  # Mehr Epochen, da wir früh stoppen
-    per_device_train_batch_size=16,  # Größer pro GPU
-    per_device_eval_batch_size=16,
-    gradient_accumulation_steps=4,  # Reduziert für kleinere effektive Batch-Größe
-    eval_strategy="steps",  # Häufigere Evaluation
-    eval_steps=100,
-    save_strategy="steps",
-    save_steps=100,
-    load_best_model_at_end=True,
-    metric_for_best_model="mse",
-    greater_is_better=False,
-    learning_rate=3e-5,  # Erhöht
-    warmup_ratio=0.1,
-    weight_decay=0.05,  # Erhöht
-    logging_dir="./logs",
-    logging_steps=20,  # Häufigeres Logging
-    report_to="none",
-    fp16=True,
-    ddp_find_unused_parameters=True
-)
+def train_and_save_best():
+    training_args = TrainingArguments(
+        **config['training_parameters']
+    )
+
+    dataset = tokenized_dataset
+    train_test = dataset.train_test_split(test_size=0.2)
+    train_val = train_test["train"].train_test_split(test_size=0.125)
+
+    train_dataset = train_val["train"]
+    val_dataset = train_val["test"]
+    test_dataset = train_test["test"]
+
+    # 4. Modell initialisieren
+    model = MTGPopularityPredictor.from_pretrained('roberta-large')
+
+    # 5. Trainer initialisieren
+    trainer = MTGTrainer(
+        model=model,
+        args=training_args,
+        train_dataset=train_dataset,
+        eval_dataset=val_dataset,
+        compute_metrics=compute_metrics
+    )
+
+    # 6. Training starten
+    trainer.train()
+
+    # 7. Bestes Modell speichern
+    trainer.save_model("best_mtg_predictor")
+
+    # 8. Finale Evaluation auf Test-Set
+    test_results = trainer.evaluate(test_dataset)
+    with open("../scores.txt", "w") as file:
+        file.write(f"{datetime.now().strftime('%Y-%m-%d_%H-%M')}: {str(test_results)}")
 
 
 def save_label_vs_prediction_plot():
@@ -224,35 +237,6 @@ def save_label_vs_prediction_plot():
 if __name__ == '__main__':
     save_label_vs_prediction_plot()
 
-    # dataset = tokenized_dataset
-    # train_test = dataset.train_test_split(test_size=0.2)
-    # train_val = train_test["train"].train_test_split(test_size=0.125)
-    #
-    # train_dataset = train_val["train"]
-    # val_dataset = train_val["test"]
-    # test_dataset = train_test["test"]
-    #
-    # # 4. Modell initialisieren
-    # model = MTGPopularityPredictor.from_pretrained('roberta-large')
-    #
-    # # 5. Trainer initialisieren
-    # trainer = MTGTrainer(
-    #     model=model,
-    #     args=training_args,
-    #     train_dataset=train_dataset,
-    #     eval_dataset=val_dataset,
-    #     compute_metrics=compute_metrics
-    # )
-    #
-    # # 6. Training starten
-    # trainer.train()
-    #
-    # # 7. Bestes Modell speichern
-    # trainer.save_model("best_mtg_predictor")
-    #
-    # # 8. Finale Evaluation auf Test-Set
-    # test_results = trainer.evaluate(test_dataset)
-    # with open("../scores.txt", "w") as file:
-    #     file.write(f"{datetime.now().strftime('%Y-%m-%d_%H-%M')}: {str(test_results)}")
+
 
 
