@@ -30,7 +30,7 @@ model_parameters:
 
 training_parameters:
   output_dir: "mtg-popularity-predictor"
-  num_train_epochs: 25
+  num_train_epochs: 40
   per_device_train_batch_size: 32
   per_device_eval_batch_size: 32
   gradient_accumulation_steps: 2

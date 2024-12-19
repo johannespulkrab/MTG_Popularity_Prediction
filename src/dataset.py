@@ -148,9 +148,9 @@ def encode_in_text(card_name):
     text = f"Name: {card_name} "
     for attr in ['manaCost', 'type', 'power', 'toughness', 'loyalty', 'text']:
         if value := card_data.get(attr):
-            text += f"{attr}: {value} "
+            text += f"{attr}: {value} ".replace("\n", " ")
         if back_value := card_data.get('<BACK> ' + attr):
-            text += f"<BACK> {attr}: {back_value} "
+            text += f"<BACK> {attr}: {back_value} ".replace("\n", " ")
 
     MANA_SYMBOLS = {
         "{T}": "tap",
